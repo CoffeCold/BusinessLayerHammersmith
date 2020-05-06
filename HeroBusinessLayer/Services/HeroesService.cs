@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using HeroBusinessLayer.Models;
 using HeroBusinessLayer.Helpers;
 using Microsoft.Extensions.Options;
-using Microsoft.AspNetCore.Mvc;
 using System.Text.RegularExpressions;
 
 namespace HeroBusinessLayer.Services
