@@ -20,66 +20,58 @@ namespace HeroBusinessLayer
 {
     public class Startup
     {
+        public IConfiguration Configuration { get; }
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
 
-        public IConfiguration Configuration { get; }
-        readonly string AllThinkableOrigins = "_myAllThinkableOrigins";
+        //readonly string AllThinkableOrigins = "_myAllThinkableOrigins";
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors(options =>
-            {
-                options.AddPolicy(name: AllThinkableOrigins,
-                                  builder =>
-                                  {
-                                      builder.SetIsOriginAllowedToAllowWildcardSubdomains()
-      .WithOrigins("*")
-      .AllowAnyMethod()
-      .AllowAnyHeader()
-      .Build();
-                                  });
-            });
+
 
             // Appsettings in appsettings.json used for DI services
             var appSettingsSection = Configuration.GetSection("AppSettings");
             services.Configure<AppSettings>(appSettingsSection);
             var appSettings = appSettingsSection.Get<AppSettings>();
 
-            // Connection string used for DI context
-            var connectionStringsSection = Configuration.GetSection("ConnectionStrings");
-            services.Configure<ConnectionStrings>(connectionStringsSection);
-            var connectionstrings = connectionStringsSection.Get<ConnectionStrings>();
-
-
             services.AddScoped<IHeroesService, HeroesService>();
 
             services.AddControllers();
+
+            // use configured connectionstring directly
             services.AddDbContext<AngularHeroesContext>(options =>
-                options.UseSqlServer(connectionstrings.AngularHeroesDbConstr)
-            );
+                options.UseSqlServer(Configuration.GetConnectionString("AngularHeroesDbConstr")));
 
 
         }
 
+        // this method allows a injected logger and is called, we use logging to check the configuration 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
+            logger.LogInformation("Configure called");
+
+
+            logger.LogInformation("AnyConfig string {0}", Configuration.GetValue<String>("AnyConfig"));
+
+            logger.LogInformation("Connection string {0}", Configuration.GetConnectionString("AngularHeroesDbConstr"));
+
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseCors(AllThinkableOrigins);
 
             }
-
             app.UseHttpsRedirection();
 
             app.UseRouting();
 
-            app.UseAuthorization();
+            //app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
