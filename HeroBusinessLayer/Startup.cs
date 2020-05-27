@@ -15,6 +15,10 @@ using HeroBusinessLayer.Models;
 using HeroBusinessLayer.Helpers;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Web;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.AzureAD.UI;
+
 
 namespace HeroBusinessLayer
 {
@@ -40,8 +44,12 @@ namespace HeroBusinessLayer
             var appSettings = appSettingsSection.Get<AppSettings>();
 
             services.AddScoped<IHeroesService, HeroesService>();
+            //services.AddProtectedWebApi(Configuration);
+            //services.AddGraphService(Configuration);
 
             services.AddControllers();
+
+            services.AddAuthentication(AzureADDefaults.BearerAuthenticationScheme).AddAzureADBearer(options => Configuration.Bind("AzureActiveDirectory", options));
 
             // use configured connectionstring directly
             services.AddDbContext<AngularHeroesContext>(options =>
@@ -71,8 +79,10 @@ namespace HeroBusinessLayer
 
             app.UseRouting();
 
-            //app.UseAuthorization();
-
+            
+            app.UseAuthentication();
+            app.UseAuthorization();
+            
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

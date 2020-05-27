@@ -7,26 +7,46 @@ using Microsoft.Extensions.Logging;
 using HeroBusinessLayer.Services;
 using HeroBusinessLayer.Models;
 using System.Reflection.Metadata.Ecma335;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Identity.Web;
+using HeroBusinessLayer.Infrastructure;
+using Graph = Microsoft.Graph;
+using Microsoft.Extensions.Options;
+
 
 namespace HeroBusinessLayer.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class HeroesController : ControllerBase
     {
         private readonly ILogger<HeroesController> _logger;
         private IHeroesService _heroesService;
-
-        public HeroesController(ILogger<HeroesController> logger, IHeroesService heroesService)
+        private readonly ITokenAcquisition tokenAcquisition;
+        private readonly WebOptions webOptions;
+        public HeroesController(ILogger<HeroesController> logger, IHeroesService heroesService, IOptions<WebOptions> webOptionValue)
         {
             _logger = logger;
             _heroesService = heroesService;
-
+            webOptions = webOptionValue.Value; 
         }
 
+        //[AuthorizeForScopes(Scopes = new[] { GraphScopes.UserReadBasicAll })]
+        //[Authorize(Policy = AuthorizationPolicies.AssignmentToUserReaderRoleRequired)]
         [HttpGet]
         public IActionResult Get(int? id, string name)
         {
+            //Graph::GraphServiceClient graphClient = GetGraphServiceClient(new[] { GraphScopes.UserReadBasicAll });
+
+            ////var users = await graphClient.Users.Request().GetAsync();
+
+            //var users = graphClient.Users.Request().GetAsync();
+
+            //_logger.LogInformation("Get heroes called, users found {0}", users);
+
+
             if (!String.IsNullOrEmpty(name))
             {
                 _logger.LogInformation("GetById heroes called for name {0}", name);
@@ -40,7 +60,7 @@ namespace HeroBusinessLayer.Controllers
                 Heroes hero = _heroesService.GetOneById(id);
                 if (hero != null) { return Ok(hero); } else { return NotFound(); }
             }
-            _logger.LogInformation("Get heroes called");
+            _logger.LogInformation("Get heroes called ");
             IEnumerable<Heroes> allheroes = _heroesService.GetAll();
             if (allheroes != null)
             {
@@ -49,7 +69,14 @@ namespace HeroBusinessLayer.Controllers
             return NotFound();
         }
 
-
+        //private Graph::GraphServiceClient GetGraphServiceClient(string[] scopes)
+        //{
+        //    return GraphServiceClientFactory.GetAuthenticatedGraphClient(async () =>
+        //    {
+        //        string result = await tokenAcquisition.GetAccessTokenForUserAsync(scopes);
+        //        return result;
+        //    }, webOptions.GraphApiUrl);
+        //}
 
         [HttpGet("{id}")]
         public IActionResult GetById(int? id)
